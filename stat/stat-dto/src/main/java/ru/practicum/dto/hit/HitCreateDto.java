@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import ru.practicum.dto.valid.ip.Ipv4;
+import ru.practicum.dto.valid.ip.Ip;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.PastOrPresent;
@@ -21,7 +21,7 @@ public class HitCreateDto {
     @NotBlank
     private String uri;
     @NotBlank
-    @Ipv4
+    @Ip
     private String ip;
     @PastOrPresent
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
