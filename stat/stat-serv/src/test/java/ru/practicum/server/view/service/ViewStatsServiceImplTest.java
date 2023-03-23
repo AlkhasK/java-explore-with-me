@@ -18,18 +18,14 @@ import java.util.Optional;
 @ExtendWith(MockitoExtension.class)
 public class ViewStatsServiceImplTest {
 
+    private final LocalDateTime start = LocalDateTime.now();
+    private final LocalDateTime end = LocalDateTime.now();
     @Mock
     private ViewStatsRepository viewStatsRepository;
-
     @Mock
     private ViewStatsMapper viewStatsMapper;
-
     @InjectMocks
     private ViewStatsServiceImpl viewStatsService;
-
-    private final LocalDateTime start = LocalDateTime.now();
-
-    private final LocalDateTime end = LocalDateTime.now();
 
     @Test
     public void getViewStatsDtoWhenExistUrisAndUniqueIp_ThenReturnViewStatsDto() {
