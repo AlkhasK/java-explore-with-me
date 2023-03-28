@@ -11,12 +11,12 @@ import java.util.List;
 
 public interface ViewStatsRepository extends JpaRepository<Hit, Long> {
 
-    @Query("select new ru.practicum.server.view.model.ViewStats(hi.app, hi.uri, count(hi.ip)) " +
+    @Query("select new ru.practicum.server.view.model.ViewStats(hi.app, hi.uri, count(hi.uri)) " +
             "from Hit as hi " +
             "where hi.timestamp between :startDateTime and :endDateTime " +
             "and hi.uri in :uris " +
-            "group by hi.app, hi.uri " +
-            "order by count(hi.ip) desc ")
+            "group by hi.uri, hi.app " +
+            "order by count(hi.uri) desc ")
     List<ViewStats> getViewStatsByDatesAndUri(@Param("startDateTime") LocalDateTime startDateTime,
                                               @Param("endDateTime") LocalDateTime endDateTime,
                                               @Param("uris") List<String> uris);
