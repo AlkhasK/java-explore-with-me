@@ -5,6 +5,7 @@ import org.springframework.http.MediaType;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
+import ru.practicum.dto.view.ViewStatsDto;
 
 import java.util.List;
 
@@ -16,14 +17,14 @@ public class BaseClient {
         this.webClient = webClient;
     }
 
-    protected <T> List<T> get(String path, MultiValueMap<String, String> params) {
+    protected List<ViewStatsDto> get(String path, MultiValueMap<String, String> params) {
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path(path)
                         .queryParams(params)
                         .build())
                 .accept(MediaType.APPLICATION_JSON)
-                .retrieve().bodyToMono(new ParameterizedTypeReference<List<T>>() {
+                .retrieve().bodyToMono(new ParameterizedTypeReference<List<ViewStatsDto>>() {
                 })
                 .block();
     }
