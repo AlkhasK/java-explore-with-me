@@ -7,9 +7,9 @@ import java.util.Objects;
 
 public class EventDateValidation {
 
-    private final static int MIN_DELTA_HOURS_EVENT_DATE_CURRENT_DATE = 2;
+    private static final int MIN_DELTA_HOURS_EVENT_DATE_CURRENT_DATE = 2;
 
-    private final static int MIN_DELTA_HOURS_EVENT_DATE_PUBLISHED = 1;
+    private static final int MIN_DELTA_HOURS_EVENT_DATE_PUBLISHED = 1;
 
     public static void validateEventCreateUpdateUser(LocalDateTime eventDate) {
         if (Objects.nonNull(eventDate) && !eventDate.isAfter(LocalDateTime.now().plusHours(MIN_DELTA_HOURS_EVENT_DATE_CURRENT_DATE))) {

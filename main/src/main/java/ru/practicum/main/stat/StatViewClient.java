@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 @Component
 public class StatViewClient {
 
-    private final static int DELTA_YEARS_FOR_INTERVAL = 1;
+    private static final int DELTA_YEARS_FOR_INTERVAL = 1;
 
     private final ViewClient viewClient;
 
