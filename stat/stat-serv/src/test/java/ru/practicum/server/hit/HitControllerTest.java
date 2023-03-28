@@ -47,7 +47,7 @@ public class HitControllerTest {
         mockMvc.perform(post("/hit")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(hitCreateDto)))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         Mockito.verify(hitService, Mockito.times(1)).createHit(Mockito.any());
     }

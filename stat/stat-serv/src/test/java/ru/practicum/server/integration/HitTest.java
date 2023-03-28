@@ -58,7 +58,7 @@ public class HitTest {
         mockMvc.perform(post("/hit")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(hitCreateDto)))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         List<Hit> hits = hitRepository.findAll();
         assertThat(hits).hasSize(expectedHitAmount);
