@@ -49,7 +49,7 @@ import java.util.stream.Stream;
 @Transactional(readOnly = true)
 public class EventServiceImpl implements EventPrivateService, EventAdminService, EventPublicService {
 
-    private final static int UNLIMITED_PARTICIPATION_LIMIT = 0;
+    private static final int UNLIMITED_PARTICIPATION_LIMIT = 0;
 
     private final EventStorage eventStorage;
     private final EventMapper eventMapper;

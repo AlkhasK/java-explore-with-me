@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class ParticipationRequestServiceImpl implements ParticipationRequestPrivateService {
 
-    private final static int UNLIMITED_PARTICIPATION_LIMIT = 0;
+    private static final int UNLIMITED_PARTICIPATION_LIMIT = 0;
 
     private final ParticipationRequestStorage participationRequestStorage;
     private final ParticipationRequestMapper participationRequestMapper;
