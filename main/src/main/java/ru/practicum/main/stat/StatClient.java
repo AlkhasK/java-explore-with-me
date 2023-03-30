@@ -1,8 +1,11 @@
 package ru.practicum.main.stat;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import ru.practicum.client.hit.HitClient;
 import ru.practicum.client.view.ViewClient;
+import ru.practicum.dto.hit.HitCreateDto;
 import ru.practicum.dto.view.ViewStatsDto;
 import ru.practicum.main.event.model.Event;
 
@@ -11,15 +14,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Component
-public class StatViewClient {
+public class StatClient {
 
+    private static final String appName = "ewm-service";
     private static final int DELTA_YEARS_FOR_INTERVAL = 1;
 
+    private final HitClient hitClient;
     private final ViewClient viewClient;
 
-    public StatViewClient(@Value("${stat-server.url}") String statServerUrl) {
+    public StatClient(@Value("${stat-server.url}") String statServerUrl) {
+        hitClient = new HitClient(statServerUrl);
         viewClient = new ViewClient(statServerUrl);
+    }
+
+    public void registerHit(String ip, String path) {
+        HitCreateDto hit = new HitCreateDto();
+        hit.setIp(ip);
+        hit.setUri(path);
+        hit.setApp(appName);
+        hit.setTimestamp(LocalDateTime.now());
+        log.info("Register hit : {}", hit);
+        hitClient.post(hit);
     }
 
     public List<ViewStatsDto> getViews(List<String> uri, LocalDateTime rangeStart, LocalDateTime rangeEnd) {

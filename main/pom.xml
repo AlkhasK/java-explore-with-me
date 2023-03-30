@@ -12,10 +12,6 @@
     <artifactId>main</artifactId>
     <name>Main</name>
 
-    <properties>
-        <jsonpatch.version>1.9</jsonpatch.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -56,7 +52,6 @@
         <dependency>
             <groupId>com.github.fge</groupId>
             <artifactId>json-patch</artifactId>
-            <version>${jsonpatch.version}</version>
         </dependency>
         <dependency>
             <groupId>ru.practicum</groupId>
