@@ -86,6 +86,7 @@ public class EventMapper {
         eventShortDto.setInitiator(initiatorDto);
         eventShortDto.setPaid(event.getPaid());
         eventShortDto.setTitle(event.getTitle());
+        eventShortDto.setParticipantLimit(event.getParticipantLimit());
         return eventShortDto;
     }
 

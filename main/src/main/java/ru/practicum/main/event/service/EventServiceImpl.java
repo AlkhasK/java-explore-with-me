@@ -27,7 +27,7 @@ import ru.practicum.main.participation.model.dto.ParticipationRequestDto;
 import ru.practicum.main.participation.model.dto.ParticipationRequestMapper;
 import ru.practicum.main.participation.storage.ParticipationRequestStorage;
 import ru.practicum.main.participation.storage.helper.RequestCountByEvent;
-import ru.practicum.main.stat.StatViewClient;
+import ru.practicum.main.stat.StatClient;
 import ru.practicum.main.user.model.User;
 import ru.practicum.main.user.storage.UserStorage;
 import ru.practicum.main.utils.JsonPatch;
@@ -42,7 +42,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -56,7 +55,7 @@ public class EventServiceImpl implements EventPrivateService, EventAdminService,
     private final UserStorage userStorage;
     private final CategoryStorage categoryStorage;
     private final JsonPatch jsonPatch;
-    private final StatViewClient viewClient;
+    private final StatClient statClient;
     private final ParticipationRequestStorage participationRequestStorage;
     private final ParticipationRequestMapper participationRequestMapper;
 
@@ -124,7 +123,7 @@ public class EventServiceImpl implements EventPrivateService, EventAdminService,
         List<EventFullDto> eventFullDtos = events.stream()
                 .map(eventMapper::toEventFullDto)
                 .collect(Collectors.toList());
-        Map<Long, Long> eventHits = viewClient.getHits(events, parameters.getRangeStart(), parameters.getRangeEnd());
+        Map<Long, Long> eventHits = statClient.getHits(events, parameters.getRangeStart(), parameters.getRangeEnd());
         eventFullDtos.forEach(ent -> ent.setViews(eventHits.getOrDefault(ent.getId(), 0L)));
         Map<Long, Long> eventConfReq = getConfirmedRequestsCount(events);
         eventFullDtos.forEach(ent -> ent.setConfirmedRequests(eventConfReq.getOrDefault(ent.getId(), 0L)));
@@ -195,7 +194,7 @@ public class EventServiceImpl implements EventPrivateService, EventAdminService,
             event.fetch("category");
             return builder.and(getFiltersPublicEvents(parameters, event, builder).toArray(new Predicate[]{}));
         }, pageable).getContent();
-        Map<Long, Long> eventHits = viewClient.getHits(events, parameters.getRangeStart(), parameters.getRangeEnd());
+        Map<Long, Long> eventHits = statClient.getHits(events, parameters.getRangeStart(), parameters.getRangeEnd());
         List<EventShortDto> eventShortDtos = events.stream()
                 .map(eventMapper::toEventShortDto)
                 .collect(Collectors.toList());
@@ -203,36 +202,20 @@ public class EventServiceImpl implements EventPrivateService, EventAdminService,
         Map<Long, Long> eventConfReq = getConfirmedRequestsCount(events);
         eventShortDtos.forEach(ent -> ent.setConfirmedRequests(eventConfReq.getOrDefault(ent.getId(), 0L)));
         if (parameters.getOnlyAvailable()) {
-            Map<Long, Integer> limits = events.stream()
-                    .collect(Collectors.toMap(Event::getId, Event::getParticipantLimit,
-                            (existing, replacement) -> existing));
             eventShortDtos = eventShortDtos.stream()
-                    .filter(entDto -> !entDto.getConfirmedRequests().equals(limits.get(entDto.getId()).longValue()))
+                    .filter(ent -> ent.getConfirmedRequests().equals(ent.getParticipantLimit().longValue()))
                     .collect(Collectors.toList());
         }
         return eventShortDtos;
     }
 
     private Map<Long, Long> getConfirmedRequestsCount(List<Event> events) {
-        List<Long> eventsWithoutConfirmation = events.stream().filter(evn -> !evn.getRequestModeration()
-                        || evn.getParticipantLimit().equals(UNLIMITED_PARTICIPATION_LIMIT))
+        List<Long> eventsIds = events.stream()
                 .map(Event::getId)
                 .collect(Collectors.toList());
-        List<Long> eventsWithConfirmation = events.stream().filter(evn -> evn.getRequestModeration()
-                        && !evn.getParticipantLimit().equals(UNLIMITED_PARTICIPATION_LIMIT))
-                .map(Event::getId)
-                .collect(Collectors.toList());
-        List<RequestCountByEvent> requestsWithoutConfirmation = new ArrayList<>();
-        if (!eventsWithoutConfirmation.isEmpty()) {
-            requestsWithoutConfirmation = participationRequestStorage
-                    .countRequestsForEvents(eventsWithoutConfirmation, List.of(Status.CONFIRMED, Status.PENDING));
-        }
-        List<RequestCountByEvent> requestsWithConfirmation = new ArrayList<>();
-        if (!eventsWithConfirmation.isEmpty()) {
-            requestsWithConfirmation = participationRequestStorage
-                    .countRequestsForEvents(eventsWithConfirmation, List.of(Status.CONFIRMED));
-        }
-        return Stream.concat(requestsWithoutConfirmation.stream(), requestsWithConfirmation.stream())
+        List<RequestCountByEvent> requestConfCount = participationRequestStorage
+                .countRequestsForEvents(eventsIds, List.of(Status.CONFIRMED));
+        return requestConfCount.stream()
                 .collect(Collectors.toMap(RequestCountByEvent::getEventId, RequestCountByEvent::getCount,
                         (existing, replacement) -> existing));
     }
@@ -289,20 +272,14 @@ public class EventServiceImpl implements EventPrivateService, EventAdminService,
                     Predicates.hasEventId(eventRoot, builder, eventId));
         }).orElseThrow(() -> new ObjectNotFoundException(String.format("Event with id=%s was not found", eventId)));
         EventFullDto eventFullDto = eventMapper.toEventFullDto(event);
-        eventFullDto.setViews(viewClient.getHit(eventFullDto.getId()));
+        eventFullDto.setViews(statClient.getHit(eventFullDto.getId()));
         eventFullDto.setConfirmedRequests(getConfirmedRequestsCount(event));
         return eventFullDto;
     }
 
     private Long getConfirmedRequestsCount(Event event) {
-        if (event.getRequestModeration()
-                && !event.getParticipantLimit().equals(UNLIMITED_PARTICIPATION_LIMIT)) {
-            return participationRequestStorage.countAllByStatusInAndEvent_Id(List.of(Status.CONFIRMED),
-                    event.getId());
-        } else {
-            return participationRequestStorage.countAllByStatusInAndEvent_Id(List.of(Status.CONFIRMED, Status.PENDING),
-                    event.getId());
-        }
+        return participationRequestStorage
+                .countAllByStatusInAndEvent_Id(List.of(Status.CONFIRMED), event.getId());
     }
 
     @Override
@@ -347,8 +324,11 @@ public class EventServiceImpl implements EventPrivateService, EventAdminService,
         int participationRequestConfirmedCount = participationRequestStorage
                 .countAllByStatusInAndEvent_Id(List.of(Status.CONFIRMED), event.getId()).intValue();
         int availableParticipationLimit = event.getParticipantLimit() - participationRequestConfirmedCount;
-        if (availableParticipationLimit < participationRequests.size()) {
+        if (availableParticipationLimit == 0) {
             throw new ParticipationRequestParticipantLimitViolationException("The participant limit has been reached");
+        }
+        if (availableParticipationLimit < participationRequests.size()) {
+            participationRequests = participationRequests.subList(0, availableParticipationLimit);
         }
         validateParticipationRequestStatus(participationRequests);
         participationRequests.forEach(pr -> pr.setStatus(Status.CONFIRMED));

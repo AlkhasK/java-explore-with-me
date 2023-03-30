@@ -9,7 +9,7 @@ import ru.practicum.main.event.model.dto.EventFullDto;
 import ru.practicum.main.event.model.dto.EventShortDto;
 import ru.practicum.main.event.model.parameters.SortType;
 import ru.practicum.main.event.service.EventPublicService;
-import ru.practicum.main.stat.StatHitClient;
+import ru.practicum.main.stat.StatClient;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
@@ -23,7 +23,7 @@ public class EventPublicController {
 
     private final EventPublicService eventService;
 
-    private final StatHitClient hitClient;
+    private final StatClient statClient;
 
     @GetMapping
     public List<EventShortDto> findAll(@RequestParam(required = false) String text,
@@ -51,7 +51,7 @@ public class EventPublicController {
         log.info("GET : public find all events with criteria text : {}, categories : {}, " +
                         "paid : {}, rangeStart : {}, rangeEnd : {}, sort : {}, from : {}, size : {}",
                 text, categories, paid, rangeStart, rangeEnd, sort, from, size);
-        hitClient.registerHit(request.getRemoteAddr(), request.getRequestURI());
+        statClient.registerHit(request.getRemoteAddr(), request.getRequestURI());
         return eventService.getEvents(parameters, from, size);
     }
 
@@ -59,7 +59,7 @@ public class EventPublicController {
     public EventFullDto find(@PathVariable Long eventId, HttpServletRequest request) {
         log.info("GET : find event id : {}", eventId);
         EventFullDto eventFullDto = eventService.getEvent(eventId);
-        hitClient.registerHit(request.getRemoteAddr(), request.getRequestURI());
+        statClient.registerHit(request.getRemoteAddr(), request.getRequestURI());
         return eventFullDto;
     }
 }

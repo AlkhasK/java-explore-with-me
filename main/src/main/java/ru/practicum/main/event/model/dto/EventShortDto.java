@@ -1,6 +1,7 @@
 package ru.practicum.main.event.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -23,4 +24,6 @@ public class EventShortDto {
     private Boolean paid;
     private String title;
     private Long views;
+    @JsonIgnore
+    private Integer participantLimit;
 }
