@@ -16,6 +16,7 @@ import ru.practicum.dto.view.ViewStatsDto;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -51,8 +52,8 @@ public class ViewClientTest {
     public void getWhenDatesUrisUniqueIp_ThenReturnListViewStatsDto() {
         String expectedMethod = "GET";
         int expectedReturnSize = 1;
-        LocalDateTime start = LocalDateTime.now();
-        LocalDateTime end = LocalDateTime.now();
+        LocalDateTime start = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        LocalDateTime end = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         List<String> uris = List.of("/events/1", "/events/2");
         Boolean unique = true;
         String expectedPath = String.format("/stats?start=%s&end=%s&uris=%s&unique=%s",
