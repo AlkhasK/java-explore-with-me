@@ -371,5 +371,4 @@ public class EventServiceImpl implements EventPrivateService, EventAdminService,
                     throw new EventConditionNotMetException("Request must have status PENDING");
                 });
     }
-
 }

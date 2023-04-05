@@ -53,4 +53,6 @@ public interface ParticipationRequestStorage extends JpaRepository<Participation
             "group by pr.event.id")
     List<RequestCountByEvent> countRequestsForEvents(@Param("eventIds") List<Long> eventId,
                                                      @Param("statuses") List<Status> statuses);
+
+    Optional<ParticipationRequest> findByEvent_IdAndRequester_IdAndStatus(Long eventId, Long userId, Status status);
 }
