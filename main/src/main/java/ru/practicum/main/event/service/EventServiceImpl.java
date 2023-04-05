@@ -7,11 +7,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.main.category.model.Category;
 import ru.practicum.main.category.storage.CategoryStorage;
-import ru.practicum.main.comment.model.Comment;
-import ru.practicum.main.comment.model.dto.CommentDto;
-import ru.practicum.main.comment.model.dto.CommentMapper;
-import ru.practicum.main.comment.model.dto.NewCommentDto;
-import ru.practicum.main.comment.storage.CommentStorage;
 import ru.practicum.main.error.exception.EventConditionNotMetException;
 import ru.practicum.main.error.exception.ObjectNotFoundException;
 import ru.practicum.main.error.exception.ParticipationRequestParticipantLimitViolationException;
@@ -63,8 +58,6 @@ public class EventServiceImpl implements EventPrivateService, EventAdminService,
     private final StatClient statClient;
     private final ParticipationRequestStorage participationRequestStorage;
     private final ParticipationRequestMapper participationRequestMapper;
-    private final CommentStorage commentStorage;
-    private final CommentMapper commentMapper;
 
     @Transactional
     @Override
@@ -377,26 +370,5 @@ public class EventServiceImpl implements EventPrivateService, EventAdminService,
                 .ifPresent(pr -> {
                     throw new EventConditionNotMetException("Request must have status PENDING");
                 });
-    }
-
-    @Transactional
-    @Override
-    public CommentDto moderateComment(Long userId, Long eventId, Long commentId, NewCommentDto newCommentDto) {
-        Comment comment = commentStorage.findByIdAuthorIdEventIdFetch(commentId, userId, eventId)
-                .orElseThrow(() -> new ObjectNotFoundException(
-                        String.format("Comment for event id=%s with id=%s was not found", eventId, commentId)));
-        comment.setText(newCommentDto.getText());
-        comment.setStatus(ru.practicum.main.comment.model.Status.MODERATED);
-        Comment updatedComment = commentStorage.save(comment);
-        return commentMapper.toCommentDto(updatedComment);
-    }
-
-    @Transactional
-    @Override
-    public void deleteComment(Long userId, Long eventId, Long commentId) {
-        commentStorage.findByIdAndEvent_IdAndEvent_Initiator_Id(commentId, eventId, userId)
-                .orElseThrow(() -> new ObjectNotFoundException(
-                        String.format("Comment for event id=%s with id=%s was not found", eventId, commentId)));
-        commentStorage.deleteByIdAndEvent_Id(commentId, eventId);
     }
 }

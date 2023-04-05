@@ -35,19 +35,4 @@ public interface CommentStorage extends JpaRepository<Comment, Long> {
                     "from Comment c " +
                     "where c.event.id = :eventId")
     Page<Comment> findAllByEventIdFetch(@Param("eventId") Long eventId, Pageable pageable);
-
-    @Query("select c " +
-            "from Comment c " +
-            "join fetch c.event " +
-            "join fetch c.author " +
-            "where c.id = :commentId " +
-            "and c.event.initiator.id = :authorId " +
-            "and c.event.id = :eventId ")
-    Optional<Comment> findByIdAuthorIdEventIdFetch(@Param("commentId") Long commentId,
-                                                   @Param("authorId") Long authorId,
-                                                   @Param("eventId") Long eventId);
-
-    Optional<Comment> findByIdAndEvent_IdAndEvent_Initiator_Id(Long commentId, Long eventId, Long userId);
-
-    void deleteByIdAndEvent_Id(Long commentId, Long eventId);
 }

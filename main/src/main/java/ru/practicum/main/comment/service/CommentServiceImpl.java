@@ -15,6 +15,7 @@ import ru.practicum.main.error.exception.ObjectNotFoundException;
 import ru.practicum.main.event.model.Event;
 import ru.practicum.main.event.model.State;
 import ru.practicum.main.event.storage.EventStorage;
+import ru.practicum.main.participation.storage.ParticipationRequestStorage;
 import ru.practicum.main.user.model.User;
 import ru.practicum.main.user.storage.UserStorage;
 import ru.practicum.main.utils.pagination.PageRequestWithOffset;
@@ -32,6 +33,7 @@ public class CommentServiceImpl implements CommentAdminService, CommentPublicSer
     private final EventStorage eventStorage;
     private final UserStorage userStorage;
     private final CommentMapper commentMapper;
+    private final ParticipationRequestStorage participationRequestStorage;
 
     @Override
     @Transactional
@@ -42,6 +44,11 @@ public class CommentServiceImpl implements CommentAdminService, CommentPublicSer
                 .orElseThrow(() -> new ObjectNotFoundException(String.format("Event with id=%s was not found", eventId)));
         if (event.getState() != State.PUBLISHED) {
             throw new ConditionNotMetException("Event must have status published");
+        }
+        if (!author.getId().equals(event.getInitiator().getId())) {
+            participationRequestStorage.findByEvent_IdAndRequester_IdAndStatus(eventId,
+                            userId, ru.practicum.main.participation.model.Status.CONFIRMED)
+                    .orElseThrow(() -> new ConditionNotMetException("User must have confirmed participation request"));
         }
         Comment comment = commentMapper.toComment(author, event, newCommentDto);
         comment.setStatus(Status.UNMODIFIED);
@@ -58,6 +65,7 @@ public class CommentServiceImpl implements CommentAdminService, CommentPublicSer
                         String.format("Comment with id=%s user id=%s was not found", commentId, userId)));
         comment.setText(newCommentDto.getText());
         comment.setStatus(Status.MODIFIED);
+        comment.setModifiedOn(LocalDateTime.now());
         Comment updatedComment = commentStorage.save(comment);
         return commentMapper.toCommentDto(updatedComment);
     }
@@ -78,6 +86,7 @@ public class CommentServiceImpl implements CommentAdminService, CommentPublicSer
                 .orElseThrow(() -> new ObjectNotFoundException(
                         String.format("Comment with id=%s was not found", commentId)));
         comment.setStatus(Status.MODERATED);
+        comment.setModifiedOn(LocalDateTime.now());
         comment.setText(newCommentDto.getText());
         Comment updatedComment = commentStorage.save(comment);
         return commentMapper.toCommentDto(updatedComment);

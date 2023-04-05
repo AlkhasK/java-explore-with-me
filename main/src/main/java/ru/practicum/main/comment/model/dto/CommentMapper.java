@@ -21,6 +21,7 @@ public class CommentMapper {
         commentDto.setText(comment.getText());
         commentDto.setCreatedOn(comment.getCreatedOn());
         commentDto.setStatus(comment.getStatus());
+        commentDto.setModifiedOn(comment.getModifiedOn());
         return commentDto;
     }
 

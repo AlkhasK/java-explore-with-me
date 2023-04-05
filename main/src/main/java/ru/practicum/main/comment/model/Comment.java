@@ -30,4 +30,6 @@ public class Comment {
     private Status status;
     @Column(name = "created_on")
     private LocalDateTime createdOn;
+    @Column(name = "modified_on")
+    private LocalDateTime modifiedOn;
 }
